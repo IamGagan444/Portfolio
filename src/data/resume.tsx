@@ -1,17 +1,17 @@
-import { Icons } from "@/components/icons";
-import { HomeIcon, NotebookIcon } from "lucide-react";
-
-export const DATA = {
-  name: "Gagan pallai",
-  initials: "GP",
-  url: "https://dillion.io",
-  location: "San Francisco, CA",
-  locationLink: "https://www.google.com/maps/place/sanfrancisco",
-  description:
-    "Software Engineer and Entrepreneur. I love building things and helping people. Very active on Twitter.",
-  summary:
-    "I am a dedicated MERN stack developer with a robust foundation in MongoDB, Express.js, React.js, and Node.js. With 15 months of hands-on experience at Nearo Pvt Limited, I have independently developed the entire frontend of the Nearo seller site using React.js, Redux Toolkit, Material UI, and Tailwind CSS. My role involved creating dynamic and responsive web applications, integrating APIs seamlessly, and ensuring efficient state management. I am passionate about building scalable and efficient solutions, continuously learning new technologies, and thriving in collaborative environments. My goal is to contribute to innovative projects that make a meaningful impact, while achieving professional growth and personal fulfillment.",
-  avatarUrl: "/me2.jpeg",
+ import { Icons } from "@/components/icons";
+ import { HomeIcon, NotebookIcon } from "lucide-react";
+ 
+ export const DATA = {
+   name: "Gagan Pallai",
+   initials: "GP",
+   url: "https://www.gaganpallai.in/",
+   location: "Odisha, Ganjam",
+   locationLink: "https://www.google.com/maps/place/Ganjam,+Odisha",
+   description:
+     "Gagan Pallai is a MERN stack developer from Odisha, Ganjam, currently learning Generative AI and building high-performance web applications.",
+   summary:
+     "I am a dedicated MERN stack developer from Odisha, Ganjam, with a robust foundation in MongoDB, Express.js, React.js, and Node.js. With 15 months of hands-on experience at Nearo Pvt Limited, I have independently developed the entire frontend of the Nearo seller site using React.js, Redux Toolkit, Material UI, and Tailwind CSS. My role involved creating dynamic and responsive web applications, integrating APIs seamlessly, and ensuring efficient state management. I am passionate about building scalable and efficient solutions, exploring Generative AI, and continuously learning new technologies. My goal is to contribute to innovative projects that make a meaningful impact, while achieving professional growth and personal fulfillment.",
+   avatarUrl: "/me2.jpeg",
   skills: [
     "HTML",
     "CSS",
@@ -98,7 +98,7 @@ export const DATA = {
     {
       title: "Nearo Seller",
       href: "https://seller.nearo.in/",
-      dates: "Jan 2024=3 - aug 2024",
+      dates: "Jan 2023 - aug 2024",
       active: true,
       description:
         "Developed and deployed* the entire frontend of the Nearo seller site using React.js, Redux CSS.● Collaborated closely* with backend developers to integrate APIs, ensuring seamless data flow and enhanced user experienc. ",

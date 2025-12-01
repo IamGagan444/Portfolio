@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     template: `%s | ${DATA.name}`,
   },
   description: DATA.description,
+  alternates: {
+    canonical: DATA.url,
+  },
   openGraph: {
     title: `${DATA.name}`,
     description: DATA.description,
@@ -41,6 +44,12 @@ export const metadata: Metadata = {
   twitter: {
     title: `${DATA.name}`,
     card: "summary_large_image",
+    creator: "@iam_gagan_2003",
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon_16x16.png',
+    apple: '/apple_touch_icon.png',
   },
   verification: {
     google: "",
