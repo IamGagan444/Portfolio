@@ -1,60 +1,44 @@
-import Navbar from "@/components/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { DATA } from "@/data/resume";
+import { SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
-import type { Metadata } from "next";
-import { Inter as FontSans } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
-const fontSans = FontSans({
+const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
 });
 
+const fontSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+});
+
+const fontMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
+
+// Site-wide defaults. Public pages derive their titles and descriptions from
+// the profile in `(public)/layout.tsx`.
 export const metadata: Metadata = {
-  metadataBase: new URL(DATA.url),
-  title: {
-    default: DATA.name,
-    template: `%s | ${DATA.name}`,
-  },
-  description: DATA.description,
-  alternates: {
-    canonical: DATA.url,
-  },
-  openGraph: {
-    title: `${DATA.name}`,
-    description: DATA.description,
-    url: DATA.url,
-    siteName: `${DATA.name}`,
-    locale: "en_US",
-    type: "website",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  twitter: {
-    title: `${DATA.name}`,
-    card: "summary_large_image",
-    creator: "@iam_gagan_2003",
-  },
+  metadataBase: new URL(SITE_URL),
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon_16x16.png',
-    apple: '/apple_touch_icon.png',
+    icon: "/favicon.ico",
+    shortcut: "/favicon_16x16.png",
+    apple: "/apple_touch_icon.png",
   },
-  verification: {
-    google: "",
-    yandex: "",
-  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8f8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#070a0a" },
+  ],
 };
 
 export default function RootLayout({
@@ -66,15 +50,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased max-w-2xl mx-auto py-12 sm:py-24 px-6",
-          fontSans.variable
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable,
+          fontMono.variable,
+          fontSerif.variable
         )}
       >
-        <ThemeProvider attribute="class" defaultTheme="light">
-          <TooltipProvider delayDuration={0}>
-            {children}
-            <Navbar />
-          </TooltipProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark">
+          <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

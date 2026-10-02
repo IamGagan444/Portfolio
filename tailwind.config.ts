@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import typography from "@tailwindcss/typography";
+import animate from "tailwindcss-animate";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
 const config = {
@@ -21,6 +23,8 @@ const config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
+        mono: ["var(--font-mono)", ...fontFamily.mono],
+        serif: ["var(--font-serif)", ...fontFamily.serif],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -52,6 +56,10 @@ const config = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        brand: {
+          DEFAULT: "hsl(var(--brand))",
+          foreground: "hsl(var(--brand-foreground))",
+        },
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
@@ -63,6 +71,16 @@ const config = {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(calc(-50% - var(--gap, 1rem) / 2))" },
+        },
+        "border-beam": {
+          to: { "--beam-angle": "360deg" },
+        },
+        blink: {
+          "50%": { opacity: "0" },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -73,12 +91,16 @@ const config = {
         },
       },
       animation: {
+        marquee: "marquee var(--duration, 40s) linear infinite",
+        "marquee-reverse": "marquee var(--duration, 40s) linear infinite reverse",
+        "border-beam": "border-beam var(--beam-duration, 6s) linear infinite",
+        blink: "blink 1s step-end infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [animate, typography],
 } satisfies Config;
 
 export default config;

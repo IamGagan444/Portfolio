@@ -5,16 +5,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** True for images `next/image` may optimize: local files and Cloudinary assets. */
+export function isOptimizableImage(src: string) {
+  return (src.startsWith("/") && !src.startsWith("//")) || src.startsWith("https://res.cloudinary.com/");
+}
+
 export function formatDate(date: string) {
-  let currentDate = new Date().getTime();
+  const currentDate = new Date().getTime();
   if (!date.includes("T")) {
     date = `${date}T00:00:00`;
   }
-  let targetDate = new Date(date).getTime();
-  let timeDifference = Math.abs(currentDate - targetDate);
-  let daysAgo = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+  const targetDate = new Date(date).getTime();
+  const timeDifference = Math.abs(currentDate - targetDate);
+  const daysAgo = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
 
-  let fullDate = new Date(date).toLocaleString("en-us", {
+  const fullDate = new Date(date).toLocaleString("en-us", {
     month: "long",
     day: "numeric",
     year: "numeric",

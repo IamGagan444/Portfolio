@@ -18,6 +18,7 @@ interface ResumeCardProps {
   badges?: readonly string[];
   period: string;
   description?: string;
+  tags?: readonly string[];
 }
 export const ResumeCard = ({
   logoUrl,
@@ -28,6 +29,7 @@ export const ResumeCard = ({
   badges,
   period,
   description,
+  tags,
 }: ResumeCardProps) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
@@ -101,6 +103,15 @@ export const ResumeCard = ({
               className="mt-2 text-xs sm:text-sm"
             >
               {description}
+              {tags && tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="px-1 py-0 text-[10px]">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
         </div>
