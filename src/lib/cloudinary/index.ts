@@ -55,6 +55,16 @@ export async function destroyMedia(publicIds: string[], resourceType: ResourceTy
   );
 }
 
+/**
+ * Fetches a raw asset (e.g. a PDF) through Cloudinary's signed download API.
+ * Unlike public delivery URLs, this works even when the account restricts
+ * PDF/ZIP delivery (the default on free plans).
+ */
+export async function fetchRawAsset(publicId: string): Promise<Response> {
+  const url = client().utils.private_download_url(publicId, "", { resource_type: "raw", type: "upload" });
+  return fetch(url, { cache: "no-store" });
+}
+
 export type StoredAsset = { publicId: string; createdAt: string; bytes: number; resourceType: ResourceType };
 
 /** Lists every asset stored under this site's media folder. */

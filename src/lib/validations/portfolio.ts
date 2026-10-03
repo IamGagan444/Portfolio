@@ -262,6 +262,8 @@ export type ResumeDTO = {
   id: string;
   title: string;
   fileUrl: string;
+  /** Storage id; files are served through /resume rather than fileUrl. */
+  publicId?: string;
   fileName: string;
   fileSize: number;
   version: number;

@@ -233,10 +233,10 @@ export function ResumeManager() {
                       Set active
                     </Button>
                   )}
-                  <a href={resume.fileUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-8 rounded-md")} aria-label={`View version ${resume.version}`}>
+                  <a href={`${ENDPOINT}/${resume.id}/file`} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-8 rounded-md")} aria-label={`View version ${resume.version}`}>
                     <ExternalLinkIcon className="size-3.5" />
                   </a>
-                  <a href={resume.fileUrl} download={resume.fileName} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-8 rounded-md")} aria-label={`Download version ${resume.version}`}>
+                  <a href={`${ENDPOINT}/${resume.id}/file?download=1`} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-8 rounded-md")} aria-label={`Download version ${resume.version}`}>
                     <DownloadIcon className="size-3.5" />
                   </a>
                   <Button variant="ghost" size="icon" className="size-8 rounded-md" onClick={() => setRenaming({ id: resume.id, title: resume.title })} aria-label={`Rename version ${resume.version}`}>

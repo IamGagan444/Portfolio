@@ -1,16 +1,16 @@
 import { getActiveResume } from "@/lib/data/portfolio";
+import { resumeFileResponse } from "@/lib/resume";
 
 /**
- * Stable public link to the current resume (`/resume`). Redirects to whichever
- * version is active, so shared links never go stale after an update.
+ * Stable public link to the current resume (`/resume`). Always serves the
+ * active version, so shared links never go stale after an update.
+ * `?download=1` downloads instead of opening in the browser.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const resume = await getActiveResume();
   if (!resume) {
     return new Response("Resume not available", { status: 404, headers: { "Content-Type": "text/plain" } });
   }
-  return new Response(null, {
-    status: 307,
-    headers: { Location: resume.fileUrl, "Cache-Control": "no-store" },
-  });
+  const download = new URL(request.url).searchParams.get("download") === "1";
+  return resumeFileResponse(resume, { download });
 }
