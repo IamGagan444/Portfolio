@@ -48,11 +48,14 @@ export function Marquee({
   children,
   reverse,
   duration = 40,
+  repeat = 4,
   className,
 }: {
   children: React.ReactNode;
   reverse?: boolean;
   duration?: number;
+  /** Copies of the content; enough to cover wide screens with no gap. */
+  repeat?: number;
   className?: string;
 }) {
   return (
@@ -60,10 +63,10 @@ export function Marquee({
       className={cn("group flex overflow-hidden mask-fade-x [--gap:0.75rem] [gap:var(--gap)]", className)}
       style={{ "--duration": `${duration}s` } as React.CSSProperties}
     >
-      {[0, 1].map((copy) => (
+      {Array.from({ length: repeat }, (_, copy) => (
         <div
           key={copy}
-          aria-hidden={copy === 1}
+          aria-hidden={copy > 0}
           className={cn(
             "flex shrink-0 items-center [gap:var(--gap)] group-hover:[animation-play-state:paused] motion-reduce:animate-none",
             reverse ? "animate-marquee-reverse" : "animate-marquee"
@@ -136,15 +139,24 @@ export function Reveal({
 }
 
 /** Live clock for a timezone, e.g. "3:42 PM". */
-export function LocalTime({ timeZone = "Asia/Kolkata" }: { timeZone?: string }) {
+export function LocalTime({ timeZone = "Asia/Kolkata", showZone = false }: { timeZone?: string; showZone?: boolean }) {
   const [time, setTime] = useState<string | null>(null);
   useEffect(() => {
     const fmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone });
-    const update = () => setTime(fmt.format(new Date()));
+    // en-IN names Indian time "IST"; en-US would print "GMT+5:30". Other zones read fine either way.
+    const zoneFmt = new Intl.DateTimeFormat(timeZone === "Asia/Kolkata" ? "en-IN" : "en-US", {
+      timeZone,
+      timeZoneName: "short",
+    });
+    const update = () => {
+      const now = new Date();
+      const zone = zoneFmt.formatToParts(now).find((p) => p.type === "timeZoneName")?.value;
+      setTime(showZone && zone ? `${fmt.format(now)} ${zone}` : fmt.format(now));
+    };
     update();
     const id = window.setInterval(update, 15_000);
     return () => window.clearInterval(id);
-  }, [timeZone]);
+  }, [timeZone, showZone]);
   return <span className="tabular-nums">{time ?? "--:--"}</span>;
 }
 

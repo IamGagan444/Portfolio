@@ -18,7 +18,13 @@ export function ProjectTile({ project, index, wide }: { project: ProjectDTO; ind
     <Reveal delay={(index % 3) * 0.08} className={cn(wide && "md:col-span-2")}>
       <MagicCard className="flex h-full flex-col">
         {index === 0 && <BorderBeam />}
-        <Link href={`/projects/${project.slug}`} className="relative block overflow-hidden border-b bg-muted" aria-label={project.title}>
+        <Link
+          href={`/projects/${project.slug}`}
+          className="relative block overflow-hidden border-b bg-muted"
+          aria-label={project.title}
+          data-cursor="view"
+          data-cursor-label="View project"
+        >
           <div className={cn("relative w-full", wide ? "aspect-[16/8]" : "aspect-[16/10]")}>
             {project.video ? (
               <LazyVideo src={project.video} className="absolute inset-0 size-full object-cover object-top transition-transform duration-700 group-hover/magic:scale-[1.03]" />

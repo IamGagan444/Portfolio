@@ -1,5 +1,5 @@
 import { Dock, DockIcon } from "@/components/magicui/dock";
-import { ModeToggle } from "@/components/mode-toggle";
+import { AnimatedThemeToggler } from "@/components/animated-theme-toggler";
 import { SocialIcon } from "@/components/social-icon";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -105,7 +105,7 @@ export default function Navbar({ socialLinks, hasResume }: NavbarProps) {
         <DockIcon>
           <Tooltip>
             <TooltipTrigger asChild>
-              <ModeToggle />
+              <AnimatedThemeToggler />
             </TooltipTrigger>
             <TooltipContent>
               <p>Theme</p>

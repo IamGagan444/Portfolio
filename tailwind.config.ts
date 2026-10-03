@@ -73,7 +73,7 @@ const config = {
       keyframes: {
         marquee: {
           from: { transform: "translateX(0)" },
-          to: { transform: "translateX(calc(-50% - var(--gap, 1rem) / 2))" },
+          to: { transform: "translateX(calc(-100% - var(--gap, 1rem)))" },
         },
         "border-beam": {
           to: { "--beam-angle": "360deg" },

@@ -214,6 +214,21 @@ export const profileSchema = z.strictObject({
   heroImages: z.array(mediaSchema).max(6, "At most 6 hero images"),
   location: optionalText(120),
   locationUrl: optionalUrl,
+  latitude: z.number().min(-90, "Latitude must be between -90 and 90").max(90, "Latitude must be between -90 and 90").nullable(),
+  longitude: z.number().min(-180, "Longitude must be between -180 and 180").max(180, "Longitude must be between -180 and 180").nullable(),
+  timezone: z
+    .string()
+    .trim()
+    .max(64)
+    .refine((tz) => {
+      if (!tz) return true;
+      try {
+        new Intl.DateTimeFormat("en-US", { timeZone: tz });
+        return true;
+      } catch {
+        return false;
+      }
+    }, "Unknown time zone (use an IANA name like Asia/Kolkata)"),
   email: z.union([z.literal(""), z.email("Invalid email").max(254)]),
   phone: z.union([
     z.literal(""),

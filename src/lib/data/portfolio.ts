@@ -36,7 +36,7 @@ import {
 
 const DAY = 60 * 60 * 24;
 // Bump when a DTO's shape changes so stale cache entries are never read.
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const ORDER = { order: 1, createdAt: -1 } as const;
 
 function cached<Args extends unknown[], R>(

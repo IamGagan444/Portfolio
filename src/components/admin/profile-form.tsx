@@ -53,6 +53,9 @@ function defaults(profile: ProfileDTO | null): ProfileInput {
     heroImages: profile?.heroImages ?? [],
     location: profile?.location ?? "",
     locationUrl: profile?.locationUrl ?? "",
+    latitude: profile?.latitude ?? null,
+    longitude: profile?.longitude ?? null,
+    timezone: profile?.timezone ?? "",
     email: profile?.email ?? "",
     phone: profile?.phone ?? "",
     availability: profile?.availability ?? "",
@@ -187,6 +190,37 @@ function ProfileForm({ profile }: { profile: ProfileDTO | null }) {
           </Field>
           <Field label="Location link" htmlFor="locationUrl" error={errors.locationUrl?.message}>
             <Input id="locationUrl" type="url" placeholder="https://maps.google.com/…" {...register("locationUrl")} />
+          </Field>
+          <Field
+            label="Latitude"
+            htmlFor="latitude"
+            error={errors.latitude?.message}
+            hint="Pins you on the homepage globe and map. Right-click a spot in Google Maps to copy coordinates."
+          >
+            <Input
+              id="latitude"
+              type="number"
+              step="any"
+              placeholder="19.3866"
+              {...register("latitude", { setValueAs: (v) => (v === "" || v === null ? null : Number(v)) })}
+            />
+          </Field>
+          <Field label="Longitude" htmlFor="longitude" error={errors.longitude?.message}>
+            <Input
+              id="longitude"
+              type="number"
+              step="any"
+              placeholder="84.9802"
+              {...register("longitude", { setValueAs: (v) => (v === "" || v === null ? null : Number(v)) })}
+            />
+          </Field>
+          <Field label="Time zone" htmlFor="timezone" error={errors.timezone?.message} hint="IANA name, shown as your live local time.">
+            <Input id="timezone" placeholder="Asia/Kolkata" list="timezones" {...register("timezone")} />
+            <datalist id="timezones">
+              {["Asia/Kolkata", "UTC", "Europe/London", "Europe/Berlin", "America/New_York", "America/Los_Angeles", "Asia/Singapore", "Asia/Dubai", "Asia/Tokyo", "Australia/Sydney"].map((tz) => (
+                <option key={tz} value={tz} />
+              ))}
+            </datalist>
           </Field>
         </div>
       </FormSection>

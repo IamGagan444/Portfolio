@@ -21,6 +21,10 @@ export interface ProfileDoc {
   heroImages: MediaDoc[];
   location: string;
   locationUrl: string;
+  latitude: number | null;
+  longitude: number | null;
+  /** IANA time zone, e.g. Asia/Kolkata — drives the live local-time display. */
+  timezone: string;
   email: string;
   phone: string;
   availability: string;
@@ -50,6 +54,9 @@ const profileSchema = new Schema<ProfileDoc>(
     heroImages: { type: [mediaSchema], default: [] },
     location: { type: String, default: "" },
     locationUrl: { type: String, default: "" },
+    latitude: { type: Number, default: null, min: -90, max: 90 },
+    longitude: { type: Number, default: null, min: -180, max: 180 },
+    timezone: { type: String, default: "" },
     email: { type: String, default: "" },
     phone: { type: String, default: "" },
     availability: { type: String, default: "" },

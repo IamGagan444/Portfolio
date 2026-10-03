@@ -1,4 +1,5 @@
 import { BorderBeam, Reveal } from "@/components/portfolio/effects";
+import { Lens } from "@/components/portfolio/lens";
 import { HyperText } from "@/components/portfolio/scramble";
 import { Container } from "@/components/portfolio/section";
 import { projectLinks } from "@/components/portfolio/project-props";
@@ -128,6 +129,7 @@ export default async function ProjectPage({ params }: Props) {
                 className="pointer-events-none w-full object-cover object-top"
               />
             ) : hero ? (
+              <Lens zoom={2.2} size={200}>
               <Image
                 src={hero.url}
                 alt={hero.alt || project.title}
@@ -138,6 +140,7 @@ export default async function ProjectPage({ params }: Props) {
                 sizes="(max-width: 1024px) 100vw, 1024px"
                 className="w-full object-cover object-top"
               />
+              </Lens>
             ) : null}
           </div>
         </Reveal>
@@ -172,7 +175,7 @@ export default async function ProjectPage({ params }: Props) {
             <div className="grid gap-4 sm:grid-cols-2">
               {gallery.map((img, i) => (
                 <Reveal key={img.url} delay={(i % 2) * 0.08}>
-                  <div className="overflow-hidden rounded-2xl border">
+                  <Lens className="rounded-2xl border" zoom={2} size={150}>
                     <Image
                       src={img.url}
                       alt={img.alt || project.title}
@@ -181,9 +184,9 @@ export default async function ProjectPage({ params }: Props) {
                       loading="lazy"
                       unoptimized={!isOptimizableImage(img.url)}
                       sizes="(max-width: 640px) 100vw, 500px"
-                      className="aspect-[16/10] w-full object-cover object-top transition-transform duration-700 hover:scale-[1.03]"
+                      className="aspect-[16/10] w-full object-cover object-top"
                     />
-                  </div>
+                  </Lens>
                 </Reveal>
               ))}
             </div>

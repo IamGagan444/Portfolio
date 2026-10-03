@@ -32,5 +32,12 @@ export function toDates<T extends Record<string, unknown>>(
 /** Profile DTO with defaults for fields older documents may lack. */
 export function profileDTO(doc: unknown): ProfileDTO {
   const dto = toDTO<Partial<ProfileDTO>>(doc);
-  return { ...dto, roles: dto.roles ?? [], heroImages: dto.heroImages ?? [] } as ProfileDTO;
+  return {
+    ...dto,
+    roles: dto.roles ?? [],
+    heroImages: dto.heroImages ?? [],
+    latitude: dto.latitude ?? null,
+    longitude: dto.longitude ?? null,
+    timezone: dto.timezone ?? "",
+  } as ProfileDTO;
 }

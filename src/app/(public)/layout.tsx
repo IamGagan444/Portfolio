@@ -1,6 +1,7 @@
 import Navbar from "@/components/navbar";
 import { ScrollProgress } from "@/components/portfolio/effects";
 import { SiteFooter, SiteHeader } from "@/components/portfolio/site-chrome";
+import { SmoothCursor } from "@/components/portfolio/smooth-cursor";
 import { getActiveResume, getProfile } from "@/lib/data/portfolio";
 import { SITE_URL } from "@/lib/site";
 import type { Metadata } from "next";
@@ -66,6 +67,7 @@ export default async function PublicLayout({
   return (
     <div className="relative min-h-dvh overflow-x-clip">
       <ScrollProgress />
+      <SmoothCursor />
       <SiteHeader profile={profile} />
       {children}
       <SiteFooter profile={profile} />

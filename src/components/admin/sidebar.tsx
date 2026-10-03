@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { ModeToggle } from "@/components/mode-toggle";
+import { AnimatedThemeToggler } from "@/components/animated-theme-toggler";
 import { cn } from "@/lib/utils";
 
 import { confirmDiscard } from "./hooks/use-unsaved-changes";
@@ -83,7 +83,7 @@ function SidebarBody({ admin, logoutAction, onNavigate }: SidebarProps & { onNav
             <p className="truncate text-[13px] font-medium">{admin.name}</p>
             <p className="truncate text-xs text-muted-foreground">{admin.email}</p>
           </div>
-          <ModeToggle />
+          <AnimatedThemeToggler />
         </div>
         <form
           action={logoutAction}

@@ -51,7 +51,16 @@ async function main() {
   await seedCollection("profile", asModel(Profile), [data.profile]);
   // Additive backfill for profiles created before newer fields existed.
   const backfill = await Profile.updateOne(
-    { $or: [{ roles: { $exists: false } }, { roles: { $size: 0 } }, { heroImages: { $exists: false } }, { heroImages: { $size: 0 } }] },
+    {
+      $or: [
+        { roles: { $exists: false } },
+        { roles: { $size: 0 } },
+        { heroImages: { $exists: false } },
+        { heroImages: { $size: 0 } },
+        { latitude: { $exists: false } },
+        { timezone: { $exists: false } },
+      ],
+    },
     [
       {
         $set: {
@@ -59,12 +68,15 @@ async function main() {
           heroImages: {
             $cond: [{ $gt: [{ $size: { $ifNull: ["$heroImages", []] } }, 0] }, "$heroImages", data.profile.heroImages],
           },
+          latitude: { $ifNull: ["$latitude", data.profile.latitude] },
+          longitude: { $ifNull: ["$longitude", data.profile.longitude] },
+          timezone: { $ifNull: ["$timezone", data.profile.timezone] },
         },
       },
     ],
     { updatePipeline: true },
   );
-  if (backfill.modifiedCount) console.log("✓ profile: added roles/hero images");
+  if (backfill.modifiedCount) console.log("✓ profile: filled in new fields (roles, hero images, location)");
   await seedCollection("projects", asModel(Project), data.projects);
   await seedCollection("experience", asModel(Experience), data.experience);
   await seedCollection("skills", asModel(Skill), data.skills);

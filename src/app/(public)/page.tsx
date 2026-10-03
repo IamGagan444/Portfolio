@@ -1,11 +1,15 @@
 import { AsciiPortrait } from "@/components/portfolio/ascii-portrait";
+import { DottedMap } from "@/components/portfolio/dotted-map";
 import {
   CopyEmail,
+  LocalTime,
   MagicCard,
   Marquee,
   NumberTicker,
   Reveal,
 } from "@/components/portfolio/effects";
+import { Globe } from "@/components/portfolio/globe";
+import { IconCloud } from "@/components/portfolio/icon-cloud";
 import { ProjectTile } from "@/components/portfolio/project-tile";
 import { HyperText, RoleRotator } from "@/components/portfolio/scramble";
 import { Container, SectionHeading } from "@/components/portfolio/section";
@@ -23,6 +27,7 @@ import {
 } from "@/lib/data/portfolio";
 import { formatEventRange, formatMonthYear, formatPeriod } from "@/lib/format";
 import { jsonLd, SITE_URL } from "@/lib/site";
+import { skillIcon } from "@/lib/skill-icons";
 import { cn, isOptimizableImage } from "@/lib/utils";
 import type { ExperienceDTO, SkillDTO } from "@/lib/validations/portfolio";
 import { SKILL_CATEGORIES } from "@/lib/validations/portfolio";
@@ -30,6 +35,18 @@ import { ArrowDownIcon, ArrowRightIcon, ArrowUpRightIcon, DownloadIcon, MapPinIc
 import Image from "next/image";
 import Link from "next/link";
 import Markdown from "react-markdown";
+
+// Collaboration hubs drawn as arcs from home on the globe and map.
+const HUBS = [
+  { name: "San Francisco", lat: 37.77, lng: -122.42 },
+  { name: "New York", lat: 40.71, lng: -74.0 },
+  { name: "London", lat: 51.51, lng: -0.13 },
+  { name: "Berlin", lat: 52.52, lng: 13.4 },
+  { name: "Dubai", lat: 25.2, lng: 55.27 },
+  { name: "Singapore", lat: 1.35, lng: 103.82 },
+  { name: "Tokyo", lat: 35.68, lng: 139.65 },
+  { name: "Sydney", lat: -33.87, lng: 151.21 },
+];
 
 function monthsOfExperience(items: ExperienceDTO[]) {
   const now = Date.now();
@@ -86,6 +103,10 @@ export default async function Page() {
     { value: hackathons.length, suffix: "", label: hackathons.length === 1 ? "hackathon" : "hackathons" },
   ];
   const skillGroups = groupSkills(skills);
+  const home =
+    profile.latitude !== null && profile.longitude !== null
+      ? { name: profile.location || "Home", lat: profile.latitude, lng: profile.longitude }
+      : null;
   const half = Math.ceil(skills.length / 2);
 
   return (
@@ -115,8 +136,20 @@ export default async function Page() {
           aria-hidden
           className="absolute -left-40 -top-40 size-[36rem] rounded-full bg-brand/10 blur-[120px] dark:bg-brand/[0.08]"
         />
-        <Container className="relative grid items-center gap-10 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-6">
-          <div className="space-y-8">
+        {home && (
+          // The globe rises from the bottom of the hero; drag it to spin.
+          <div className="absolute left-1/2 top-[62%] w-[min(1150px,170vw)] -translate-x-1/2 sm:top-[60%]">
+            <Globe
+              home={[home.lat, home.lng]}
+              destinations={HUBS.map((h) => [h.lat, h.lng])}
+              className="opacity-60 dark:opacity-75"
+            />
+          </div>
+        )}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+        {/* The layout layer ignores the pointer so the globe stays draggable; its content opts back in. */}
+        <Container className="pointer-events-none relative grid items-center gap-10 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-6">
+          <div className="pointer-events-auto space-y-8">
             <Reveal>
               <p className="inline-flex flex-wrap items-center gap-2 rounded-full border bg-background/60 px-3 py-1.5 font-mono text-xs text-muted-foreground backdrop-blur">
                 <span className="relative flex size-2">
@@ -189,8 +222,8 @@ export default async function Page() {
             </Reveal>
           </div>
 
-          <Reveal delay={0.1} className="relative mx-auto w-full max-w-[460px]">
-            <div className="relative aspect-[4/5] w-full">
+          <Reveal delay={0.1} className="pointer-events-auto relative mx-auto w-full max-w-[460px]">
+            <div className="relative aspect-[4/5] w-full" data-cursor="crosshair" data-cursor-label="scramble me">
               {/* Corner brackets frame the portrait like a viewfinder. */}
               {["left-0 top-0 border-l border-t", "right-0 top-0 border-r border-t", "bottom-0 left-0 border-b border-l", "bottom-0 right-0 border-b border-r"].map(
                 (pos) => (
@@ -416,11 +449,21 @@ export default async function Page() {
       {skillGroups.length > 0 && (
         <section id="stack" className="scroll-mt-20 py-24 sm:py-32">
           <Container>
-            <SectionHeading index="04" label="stack" title="Tools of the trade." />
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <SectionHeading
+              index="04"
+              label="stack"
+              title="Tools of the trade."
+              description="Grab the sphere and spin it — hover any logo to see what it is."
+            />
+            <div className="grid items-center gap-10 lg:grid-cols-[1fr_1fr]">
+              <Reveal className="relative mx-auto w-full max-w-[520px]">
+                <div aria-hidden className="absolute inset-[12%] rounded-full bg-brand/10 blur-3xl" />
+                <IconCloud icons={skills.map(skillIcon)} />
+              </Reveal>
+              <div className="grid gap-4">
               {skillGroups.map((group, i) => (
                 <Reveal key={group.category} delay={i * 0.06}>
-                  <MagicCard className="h-full p-6">
+                  <MagicCard className="h-full p-5">
                     <p className="mb-4 font-mono text-xs uppercase tracking-wider text-brand">
                       ./{group.category.toLowerCase()}
                     </p>
@@ -437,6 +480,7 @@ export default async function Page() {
                   </MagicCard>
                 </Reveal>
               ))}
+              </div>
             </div>
           </Container>
         </section>
@@ -563,6 +607,32 @@ export default async function Page() {
               </a>
             )}
           </div>
+          {home && (
+            <Reveal className="mt-20 w-full">
+              <div className="relative overflow-hidden rounded-3xl border bg-card/40 p-4 text-left backdrop-blur sm:p-8">
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-2">
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Currently based in</p>
+                    <p className="text-2xl font-semibold tracking-tight">{home.name}</p>
+                  </div>
+                  <p className="font-mono text-xs text-muted-foreground">
+                    <span className="text-brand">●</span> remote-ready across time zones
+                  </p>
+                </div>
+                <DottedMap home={home} destinations={HUBS}>
+                  <div className="-translate-x-1/2 translate-y-4 whitespace-nowrap rounded-full border border-brand/40 bg-background/90 px-3 py-1.5 font-mono text-[11px] shadow-[0_8px_30px_-10px_hsl(var(--brand)/0.6)] backdrop-blur sm:text-xs">
+                    <span className="text-brand">◉</span> {home.name}
+                    {profile.timezone && (
+                      <span className="text-muted-foreground">
+                        {" · "}
+                        <LocalTime timeZone={profile.timezone} />
+                      </span>
+                    )}
+                  </div>
+                </DottedMap>
+              </div>
+            </Reveal>
+          )}
         </Container>
       </section>
     </main>

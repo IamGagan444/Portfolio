@@ -47,7 +47,7 @@ export function SiteHeader({ profile }: { profile: ProfileDTO | null }) {
         </nav>
         <div className="pointer-events-auto hidden items-center gap-2 rounded-full border bg-background/60 px-3 py-1.5 font-mono text-xs text-muted-foreground backdrop-blur-md sm:flex">
           <span className="size-1.5 rounded-full bg-brand shadow-[0_0_8px_hsl(var(--brand))]" />
-          <LocalTime /> IST
+          <LocalTime timeZone={profile?.timezone || "Asia/Kolkata"} showZone />
         </div>
       </Container>
     </header>
