@@ -4,7 +4,7 @@ import { type UploadApiOptions, type UploadApiResponse, v2 as cloudinary } from 
 
 import { env } from "@/lib/env";
 
-export type ResourceType = "image" | "raw";
+export type ResourceType = "image" | "raw" | "video";
 
 let configured = false;
 
@@ -19,6 +19,41 @@ function client() {
 
 export function mediaRoot() {
   return env.cloudinary.folder;
+}
+
+/**
+ * Signature for a direct browser → Cloudinary upload. Only the parameters
+ * signed here are accepted, so the client can't change folder or formats.
+ */
+export function signDirectUpload(params: { folder: string; allowedFormats: readonly string[]; eager?: string }) {
+  const api = client();
+  const { cloudName, apiKey, apiSecret } = env.cloudinary;
+  const signed = {
+    timestamp: Math.round(Date.now() / 1000),
+    folder: `${mediaRoot()}/${params.folder}`,
+    allowed_formats: params.allowedFormats.join(","),
+    ...(params.eager ? { eager: params.eager, eager_async: "true" } : {}),
+  };
+  return {
+    cloudName,
+    apiKey,
+    ...signed,
+    signature: api.utils.api_sign_request(signed, apiSecret),
+  };
+}
+
+/** Looks up a stored asset's real metadata (size, format, duration). */
+export async function getAsset(publicId: string, resourceType: ResourceType) {
+  const result = (await client().api.resource(publicId, { resource_type: resourceType })) as {
+    public_id: string;
+    secure_url: string;
+    bytes: number;
+    format: string;
+    duration?: number;
+    width?: number;
+    height?: number;
+  };
+  return result;
 }
 
 export function uploadBuffer(

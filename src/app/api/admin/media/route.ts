@@ -6,13 +6,14 @@ import { referencedPublicIds } from "@/lib/media";
 const GRACE_PERIOD_MS = 60 * 60 * 1000;
 
 async function findUnused(): Promise<StoredAsset[]> {
-  const [images, raw, referenced] = await Promise.all([
+  const [images, raw, videos, referenced] = await Promise.all([
     listAssets("image"),
     listAssets("raw"),
+    listAssets("video"),
     referencedPublicIds(),
   ]);
   const cutoff = Date.now() - GRACE_PERIOD_MS;
-  return [...images, ...raw].filter(
+  return [...images, ...raw, ...videos].filter(
     (asset) => !referenced.has(asset.publicId) && new Date(asset.createdAt).getTime() < cutoff,
   );
 }
@@ -29,6 +30,7 @@ export const DELETE = adminRoute(async () => {
   await Promise.all([
     destroyMedia(unused.filter((a) => a.resourceType === "image").map((a) => a.publicId), "image"),
     destroyMedia(unused.filter((a) => a.resourceType === "raw").map((a) => a.publicId), "raw"),
+    destroyMedia(unused.filter((a) => a.resourceType === "video").map((a) => a.publicId), "video"),
   ]);
   return ok({ deleted: unused.length });
 });

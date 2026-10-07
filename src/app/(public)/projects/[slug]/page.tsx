@@ -6,6 +6,7 @@ import { projectLinks } from "@/components/portfolio/project-props";
 import { getProfile, getProjectBySlug, getPublishedProjects } from "@/lib/data/portfolio";
 import { formatPeriod } from "@/lib/format";
 import { absoluteUrl, jsonLd } from "@/lib/site";
+import { videoSources } from "@/lib/upload-limits";
 import { isOptimizableImage } from "@/lib/utils";
 import { ArrowLeftIcon, ArrowUpRightIcon } from "lucide-react";
 import type { Metadata } from "next";
@@ -120,14 +121,11 @@ export default async function ProjectPage({ params }: Props) {
           <div className="relative overflow-hidden rounded-2xl border bg-muted">
             <BorderBeam duration={9} />
             {project.video ? (
-              <video
-                src={project.video}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="pointer-events-none w-full object-cover object-top"
-              />
+              <video autoPlay loop muted playsInline className="pointer-events-none w-full object-cover object-top">
+                {videoSources(project.video).map((src) => (
+                  <source key={src} src={src} />
+                ))}
+              </video>
             ) : hero ? (
               <Lens zoom={2.2} size={200}>
               <Image

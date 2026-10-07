@@ -27,6 +27,7 @@ import {
 } from "@/lib/data/portfolio";
 import { formatEventRange, formatMonthYear, formatPeriod } from "@/lib/format";
 import { jsonLd, SITE_URL } from "@/lib/site";
+import { nameVariants } from "@/lib/seo";
 import { skillIcon } from "@/lib/skill-icons";
 import { cn, isOptimizableImage } from "@/lib/utils";
 import type { ExperienceDTO, SkillDTO } from "@/lib/validations/portfolio";
@@ -114,17 +115,44 @@ export default async function Page() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
+          // Person + WebSite graph. `alternateName` lets search engines match other spellings of the name.
           __html: jsonLd({
             "@context": "https://schema.org",
-            "@type": "Person",
-            name: profile.name,
-            url: SITE_URL,
-            description: profile.headline,
-            jobTitle: profile.roles[0],
-            image: profile.profileImage?.url,
-            email: profile.email || undefined,
-            address: profile.location || undefined,
-            sameAs: profile.socialLinks.filter((l) => l.url.startsWith("http")).map((l) => l.url),
+            "@graph": [
+              {
+                "@type": "Person",
+                "@id": `${SITE_URL}/#person`,
+                name: profile.name,
+                alternateName: nameVariants(profile.name).filter((n) => n !== profile.name),
+                givenName: profile.name.split(" ")[0],
+                familyName: profile.name.split(" ").slice(1).join(" ") || undefined,
+                url: SITE_URL,
+                description: profile.headline,
+                jobTitle: profile.roles[0],
+                image: profile.profileImage?.url ? new URL(profile.profileImage.url, SITE_URL).toString() : undefined,
+                email: profile.email ? `mailto:${profile.email}` : undefined,
+                address: profile.location
+                  ? { "@type": "PostalAddress", addressLocality: profile.location, addressCountry: "IN" }
+                  : undefined,
+                knowsAbout: skills.map((s) => s.name),
+                sameAs: profile.socialLinks.filter((l) => l.url.startsWith("http")).map((l) => l.url),
+              },
+              {
+                "@type": "WebSite",
+                "@id": `${SITE_URL}/#website`,
+                url: SITE_URL,
+                name: profile.name,
+                alternateName: [`${profile.name} Portfolio`, ...nameVariants(profile.name).slice(1, 6)],
+                author: { "@id": `${SITE_URL}/#person` },
+              },
+              {
+                "@type": "ProfilePage",
+                "@id": `${SITE_URL}/#profilepage`,
+                url: SITE_URL,
+                name: `${profile.name} — Portfolio`,
+                mainEntity: { "@id": `${SITE_URL}/#person` },
+              },
+            ],
           }),
         }}
       />
@@ -172,6 +200,8 @@ export default async function Page() {
                   Hi, I&apos;m
                 </span>
                 <HyperText text={firstName} duration={1100} className="block" />
+                {/* Full name in the h1 for search engines and screen readers ("Hi, I'm Gagan Pallai"). */}
+                {profile.name !== firstName && <span className="sr-only"> {profile.name.slice(firstName.length).trim()}</span>}
               </h1>
               {profile.roles.length > 0 && (
                 <p className="font-mono text-base text-brand sm:text-lg">

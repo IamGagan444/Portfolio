@@ -2,6 +2,7 @@ import "server-only";
 
 import { destroyMedia, type ResourceType } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db/connect";
+import { VIDEO_FOLDER } from "@/lib/upload-limits";
 import {
   Certification,
   Education,
@@ -27,7 +28,7 @@ export async function referencedPublicIds(): Promise<Set<string>> {
   await connectDB();
   const [projects, experience, education, certifications, hackathons, profile, resumes, skills] =
     await Promise.all([
-      Project.find().select("thumbnail images").lean(),
+      Project.find().select("thumbnail images video").lean(),
       Experience.find().select("logo").lean(),
       Education.find().select("logo").lean(),
       Certification.find().select("certificateImage").lean(),
@@ -39,6 +40,7 @@ export async function referencedPublicIds(): Promise<Set<string>> {
 
   const ids = new Set<string>([
     ...projects.flatMap((p) => publicIdsOf(p.thumbnail, p.images)),
+    ...projects.map((p) => publicIdFromUrl(p.video ?? "")).filter((id): id is string => Boolean(id)),
     ...experience.flatMap((e) => publicIdsOf(e.logo)),
     ...education.flatMap((e) => publicIdsOf(e.logo)),
     ...certifications.flatMap((c) => publicIdsOf(c.certificateImage)),
@@ -62,10 +64,13 @@ export async function destroyIfUnreferenced(publicIds: string[], resourceType: R
   if (publicIds.length === 0) return;
   try {
     const referenced = await referencedPublicIds();
-    await destroyMedia(
-      publicIds.filter((id) => !referenced.has(id)),
-      resourceType,
-    );
+    const unused = publicIds.filter((id) => !referenced.has(id));
+    // Videos live under <root>/videos/ and must be deleted as Cloudinary "video" assets.
+    const isVideo = (id: string) => id.includes(`/${VIDEO_FOLDER}/`);
+    await Promise.all([
+      destroyMedia(unused.filter((id) => !isVideo(id)), resourceType),
+      destroyMedia(unused.filter(isVideo), "video"),
+    ]);
   } catch (error) {
     console.error("[media] Cleanup failed:", error);
   }
@@ -73,7 +78,7 @@ export async function destroyIfUnreferenced(publicIds: string[], resourceType: R
 
 /** Extracts the public id from a Cloudinary delivery URL, if it is one. */
 export function publicIdFromUrl(url: string): string | null {
-  const match = /^https:\/\/res\.cloudinary\.com\/[^/]+\/(?:image|raw)\/upload\/(?:[^/]+\/)*?v\d+\/(.+?)(?:\.[a-z0-9]+)?$/i.exec(
+  const match = /^https:\/\/res\.cloudinary\.com\/[^/]+\/(?:image|raw|video)\/upload\/(?:[^/]+\/)*?v\d+\/(.+?)(?:\.[a-z0-9]+)?$/i.exec(
     url,
   );
   return match?.[1] ?? null;

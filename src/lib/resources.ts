@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 import type { ResourceConfig } from "@/lib/api/crud";
 import { TAGS } from "@/lib/cache";
-import { publicIdsOf } from "@/lib/media";
+import { publicIdFromUrl, publicIdsOf } from "@/lib/media";
 import type { Media } from "@/lib/validations/common";
 import {
   certificationPatchSchema,
@@ -69,7 +69,10 @@ export const projectResource: ResourceConfig<ProjectDoc> = {
     featured: (v) => (v === "true" ? { featured: true } : v === "false" ? { featured: false } : null),
     category: (v) => ({ category: v.slice(0, 60) }),
   },
-  mediaOf: (doc) => publicIdsOf(media(doc.thumbnail), (doc.images as Media[] | undefined) ?? []),
+  mediaOf: (doc) => [
+    ...publicIdsOf(media(doc.thumbnail), (doc.images as Media[] | undefined) ?? []),
+    ...[publicIdFromUrl(typeof doc.video === "string" ? doc.video : "")].filter((id): id is string => Boolean(id)),
+  ],
   async prepare(data, { id, existing }) {
     const out = { ...data };
     if ("technologies" in out) out.technologies = dedupe(out.technologies);

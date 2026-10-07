@@ -4,6 +4,7 @@ import { animate, motion, useInView, useMotionValue, useScroll, useSpring, useTr
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { videoSources } from "@/lib/upload-limits";
 import { cn } from "@/lib/utils";
 
 /** Card with a pointer-following spotlight and glowing border (Magic UI "Magic Card"). */
@@ -193,10 +194,16 @@ export function LazyVideo({ src, className }: { src: string; className?: string 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
+    let loaded = false;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
-          if (!video.src) video.src = src;
+          if (!loaded) {
+            // Attach sources only when visible; the browser falls back to the next one on error.
+            for (const source of video.querySelectorAll("source")) source.src = source.dataset.src ?? "";
+            video.load();
+            loaded = true;
+          }
           void video.play().catch(() => undefined);
         } else video.pause();
       },
@@ -205,5 +212,11 @@ export function LazyVideo({ src, className }: { src: string; className?: string 
     io.observe(video);
     return () => io.disconnect();
   }, [src]);
-  return <video ref={ref} muted loop playsInline preload="none" className={className} />;
+  return (
+    <video ref={ref} muted loop playsInline preload="none" className={className}>
+      {videoSources(src).map((s) => (
+        <source key={s} data-src={s} />
+      ))}
+    </video>
+  );
 }

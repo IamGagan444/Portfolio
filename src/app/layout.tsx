@@ -28,9 +28,14 @@ const fontMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon_16x16.png",
-    apple: "/apple_touch_icon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon_32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon_16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/android_chrome_192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple_touch_icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 

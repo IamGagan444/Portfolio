@@ -24,6 +24,7 @@ import { Field, FormSection } from "../form/field";
 import { ImageGallery } from "../form/image-gallery";
 import { handleFormError } from "../form/server-errors";
 import { TagInput } from "../form/tag-input";
+import { VideoUpload } from "../form/video-upload";
 import { confirmDiscard, useUnsavedChanges } from "../hooks/use-unsaved-changes";
 
 function defaults(project: ProjectDTO | null): ProjectInput {
@@ -158,12 +159,18 @@ export function ProjectForm({ project, categories = [], technologySuggestions = 
             />
             {errors.images?.message && <p className="text-xs text-destructive">{errors.images.message}</p>}
             <Field
-              label="Video URL"
+              label="Preview video"
               htmlFor="video"
               error={errors.video?.message}
-              hint="Optional autoplaying preview (MP4). Shown instead of the thumbnail on cards."
+              hint="Optional autoplaying loop, shown instead of the thumbnail on cards and the project page."
             >
-              <Input id="video" placeholder="https://…/demo.mp4" {...register("video")} />
+              <Controller
+                control={control}
+                name="video"
+                render={({ field }) => (
+                  <VideoUpload id="video" value={field.value} onChange={field.onChange} invalid={!!errors.video} />
+                )}
+              />
             </Field>
           </FormSection>
 
