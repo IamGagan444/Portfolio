@@ -27,7 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const project = await getProjectBySlug(slug);
   if (!project) return { title: "Project not found", robots: { index: false } };
 
-  const image = project.thumbnail?.url ?? project.images[0]?.url;
+  // Project screenshot when available, otherwise the branded card titled with the project.
+  const image = project.thumbnail?.url ?? project.images[0]?.url ?? `/og?title=${encodeURIComponent(project.title)}`;
   const url = `/projects/${project.slug}`;
   return {
     title: project.title,

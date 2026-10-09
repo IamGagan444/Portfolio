@@ -19,7 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
   // "Gagan Pallai — MERN stack developer": the name leads, which is what ranks for name searches.
   const homeTitle = role ? `${name} — ${role}` : name;
   const description = profile?.headline ?? "Personal portfolio";
-  const image = profile?.profileImage?.url;
+  // Branded share card (GP mark + name), not the profile photo.
+  const image = "/og";
   const x = profile?.socialLinks.find((link) => link.platform === "x");
 
   return {
@@ -50,14 +51,14 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: name,
       locale: "en_US",
       type: "website",
-      ...(image ? { images: [{ url: image }] } : {}),
+      images: [{ url: image, width: 1200, height: 630, alt: homeTitle }],
     },
     twitter: {
       title: homeTitle,
       description,
       card: "summary_large_image",
       creator: twitterHandle(x?.url),
-      ...(image ? { images: [image] } : {}),
+      images: [image],
     },
     robots: {
       index: true,
