@@ -2,8 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { type MotionValue, motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import React, { PropsWithChildren, useRef } from "react";
+import React, { useRef } from "react";
 
 export interface DockProps extends VariantProps<typeof dockVariants> {
   className?: string;
@@ -12,107 +11,79 @@ export interface DockProps extends VariantProps<typeof dockVariants> {
   children: React.ReactNode;
 }
 
+const DEFAULT_SIZE = 40;
 const DEFAULT_MAGNIFICATION = 60;
 const DEFAULT_DISTANCE = 140;
 
-const dockVariants = cva(
-  "mx-auto w-max h-full p-2 flex items-end rounded-full border"
-);
+const dockVariants = cva("mx-auto w-max h-full p-2 flex items-end rounded-full border");
 
+/**
+ * Magic UI dock with mouse-proximity magnification, implemented without an
+ * animation library: one rAF-batched pass sets icon widths, CSS eases them.
+ * Touch devices get a static dock (no work at all).
+ */
 const Dock = React.forwardRef<HTMLDivElement, DockProps>(
-  (
-    {
-      className,
-      children,
-      magnification = DEFAULT_MAGNIFICATION,
-      distance = DEFAULT_DISTANCE,
-      ...props
-    },
-    ref
-  ) => {
-    const mousex = useMotionValue(Infinity);
+  ({ className, children, magnification = DEFAULT_MAGNIFICATION, distance = DEFAULT_DISTANCE, ...props }, ref) => {
+    const innerRef = useRef<HTMLDivElement | null>(null);
+    const frame = useRef(0);
 
-    const renderChildren = () => {
-      return React.Children.map(children, (child) => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child, {
-            mousex,
-            magnification,
-            distance,
-          } as DockIconProps);
+    const setRefs = (node: HTMLDivElement | null) => {
+      innerRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    };
+
+    const magnify = (pageX: number | null) => {
+      cancelAnimationFrame(frame.current);
+      frame.current = requestAnimationFrame(() => {
+        const icons = innerRef.current?.querySelectorAll<HTMLElement>("[data-dock-icon]") ?? [];
+        for (const icon of icons) {
+          if (pageX === null) {
+            icon.style.width = `${DEFAULT_SIZE}px`;
+            continue;
+          }
+          const rect = icon.getBoundingClientRect();
+          const center = rect.left + window.scrollX + rect.width / 2;
+          const d = Math.min(distance, Math.abs(pageX - center));
+          const size = DEFAULT_SIZE + (magnification - DEFAULT_SIZE) * Math.cos((d / distance) * (Math.PI / 2));
+          icon.style.width = `${size}px`;
         }
-        return child;
       });
     };
 
     return (
-      <motion.div
-        ref={ref}
-        onMouseMove={(e) => mousex.set(e.pageX)}
-        onMouseLeave={() => mousex.set(Infinity)}
+      <div
+        ref={setRefs}
+        onPointerMove={(e) => e.pointerType === "mouse" && magnify(e.pageX)}
+        onPointerLeave={() => magnify(null)}
         {...props}
         className={cn(dockVariants({ className }))}
       >
-        {renderChildren()}
-      </motion.div>
+        {children}
+      </div>
     );
-  }
+  },
 );
 
 Dock.displayName = "Dock";
 
 export interface DockIconProps {
-  size?: number;
-  magnification?: number;
-  distance?: number;
-  mousex?: MotionValue<number>;
   className?: string;
   children?: React.ReactNode;
-  props?: PropsWithChildren;
 }
 
-const DockIcon = ({
-  magnification = DEFAULT_MAGNIFICATION,
-  distance = DEFAULT_DISTANCE,
-  mousex,
-  className,
-  children,
-  ...props
-}: DockIconProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-
-  const fallbackMouse = useMotionValue(Infinity);
-  const distanceCalc = useTransform(mousex ?? fallbackMouse, (val: number) => {
-    const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
-    return val - bounds.x - bounds.width / 2;
-  });
-
-  const widthSync = useTransform(
-    distanceCalc,
-    [-distance, 0, distance],
-    [40, magnification, 40]
-  );
-
-  const width = useSpring(widthSync, {
-    mass: 0.1,
-    stiffness: 150,
-    damping: 12,
-  });
-
-  return (
-    <motion.div
-      ref={ref}
-      style={{ width }}
-      className={cn(
-        "flex aspect-square cursor-pointer items-center justify-center rounded-full",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
+const DockIcon = ({ className, children }: DockIconProps) => (
+  <div
+    data-dock-icon
+    style={{ width: DEFAULT_SIZE }}
+    className={cn(
+      "flex aspect-square cursor-pointer items-center justify-center rounded-full transition-[width] duration-150 ease-out",
+      className,
+    )}
+  >
+    {children}
+  </div>
+);
 
 DockIcon.displayName = "DockIcon";
 

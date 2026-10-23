@@ -1,4 +1,4 @@
-import BlurFade from "@/components/magicui/blur-fade";
+import { Reveal } from "@/components/portfolio/reveal";
 import { getBlogPosts } from "@/data/blog";
 import Link from "next/link";
 
@@ -7,16 +7,15 @@ export const metadata = {
   description: "My thoughts on software development, life, and more.",
 };
 
-const BLUR_FADE_DELAY = 0.04;
 
 export default async function BlogPage() {
   const posts = await getBlogPosts();
 
   return (
     <section>
-      <BlurFade delay={BLUR_FADE_DELAY}>
+      <Reveal>
         <h1 className="font-medium text-2xl mb-8 tracking-tighter">blog</h1>
-      </BlurFade>
+      </Reveal>
       {posts
         .sort((a, b) => {
           if (
@@ -27,7 +26,7 @@ export default async function BlogPage() {
           return 1;
         })
         .map((post, id) => (
-          <BlurFade delay={BLUR_FADE_DELAY * 2 + id * 0.05} key={post.slug}>
+          <Reveal key={post.slug}>
             <Link
               className="flex flex-col space-y-1 mb-4"
               href={`/blog/${post.slug}`}
@@ -39,7 +38,7 @@ export default async function BlogPage() {
                 </p>
               </div>
             </Link>
-          </BlurFade>
+          </Reveal>
         ))}
     </section>
   );

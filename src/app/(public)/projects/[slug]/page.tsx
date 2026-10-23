@@ -1,4 +1,5 @@
-import { BorderBeam, Reveal } from "@/components/portfolio/effects";
+import { BorderBeam } from "@/components/portfolio/surfaces";
+import { Reveal } from "@/components/portfolio/reveal";
 import { Lens } from "@/components/portfolio/lens";
 import { HyperText } from "@/components/portfolio/scramble";
 import { Container } from "@/components/portfolio/section";

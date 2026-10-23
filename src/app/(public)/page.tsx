@@ -1,14 +1,9 @@
 import { AsciiPortrait } from "@/components/portfolio/ascii-portrait";
 import { DottedMap } from "@/components/portfolio/dotted-map";
-import {
-  CopyEmail,
-  LocalTime,
-  MagicCard,
-  Marquee,
-  NumberTicker,
-  Reveal,
-} from "@/components/portfolio/effects";
-import { Globe } from "@/components/portfolio/globe";
+import { CopyEmail, LocalTime, NumberTicker } from "@/components/portfolio/effects";
+import { MagicCard, Marquee } from "@/components/portfolio/surfaces";
+import { Reveal } from "@/components/portfolio/reveal";
+import { HeroGlobe } from "@/components/portfolio/hero-globe";
 import { IconCloud } from "@/components/portfolio/icon-cloud";
 import { ProjectTile } from "@/components/portfolio/project-tile";
 import { HyperText, RoleRotator } from "@/components/portfolio/scramble";
@@ -162,12 +157,12 @@ export default async function Page() {
         <div aria-hidden className="absolute inset-0 bg-grid mask-radial opacity-70" />
         <div
           aria-hidden
-          className="absolute -left-40 -top-40 size-[36rem] rounded-full bg-brand/10 blur-[120px] dark:bg-brand/[0.08]"
+          className="absolute -left-40 -top-40 size-[44rem] rounded-full bg-[radial-gradient(circle,hsl(var(--brand)/0.12),transparent_65%)]"
         />
         {home && (
           // The globe rises from the bottom of the hero; drag it to spin.
           <div className="absolute left-1/2 top-[62%] w-[min(1150px,170vw)] -translate-x-1/2 sm:top-[60%]">
-            <Globe
+            <HeroGlobe
               home={[home.lat, home.lng]}
               destinations={HUBS.map((h) => [h.lat, h.lng])}
               className="opacity-60 dark:opacity-75"
@@ -211,9 +206,8 @@ export default async function Page() {
               )}
             </div>
 
-            <Reveal delay={0.15}>
-              <p className="max-w-xl text-lg leading-relaxed text-muted-foreground text-balance">{profile.headline}</p>
-            </Reveal>
+            {/* LCP element: visible from the first paint (no fade-in). */}
+            <p className="max-w-xl text-lg leading-relaxed text-muted-foreground text-balance">{profile.headline}</p>
 
             <Reveal delay={0.25} className="flex flex-wrap items-center gap-3">
               <Link
@@ -228,7 +222,7 @@ export default async function Page() {
                   href="/resume"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border bg-background/60 px-5 py-3 text-sm font-medium backdrop-blur transition-colors hover:border-brand/60 hover:text-brand"
+                  className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-5 py-3 text-sm font-medium transition-colors hover:border-brand/60 hover:text-brand"
                 >
                   <DownloadIcon className="size-4" /> Resume
                 </a>
@@ -291,7 +285,7 @@ export default async function Page() {
       )}
 
       {/* ─── 02 · About ───────────────────────────────────────────── */}
-      <section id="about" className="scroll-mt-20 py-24 sm:py-32">
+      <section id="about" className="cv-auto scroll-mt-20 py-24 sm:py-32">
         <Container>
           <SectionHeading index="01" label="about" title="The person behind the prompt." />
           <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
@@ -369,7 +363,7 @@ export default async function Page() {
 
       {/* ─── 03 · Experience ──────────────────────────────────────── */}
       {experience.length > 0 && (
-        <section id="work" className="scroll-mt-20 py-24 sm:py-32">
+        <section id="work" className="cv-auto scroll-mt-20 py-24 sm:py-32">
           <Container>
             <SectionHeading
               index="02"
@@ -447,7 +441,7 @@ export default async function Page() {
 
       {/* ─── 04 · Projects ────────────────────────────────────────── */}
       {shownProjects.length > 0 && (
-        <section id="projects" className="scroll-mt-20 py-24 sm:py-32">
+        <section id="projects" className="cv-auto scroll-mt-20 py-24 sm:py-32">
           <Container>
             <SectionHeading
               index="03"
@@ -477,7 +471,7 @@ export default async function Page() {
 
       {/* ─── 05 · Stack ───────────────────────────────────────────── */}
       {skillGroups.length > 0 && (
-        <section id="stack" className="scroll-mt-20 py-24 sm:py-32">
+        <section id="stack" className="cv-auto scroll-mt-20 py-24 sm:py-32">
           <Container>
             <SectionHeading
               index="04"
@@ -487,7 +481,7 @@ export default async function Page() {
             />
             <div className="grid items-center gap-10 lg:grid-cols-[1fr_1fr]">
               <Reveal className="relative mx-auto w-full max-w-[520px]">
-                <div aria-hidden className="absolute inset-[12%] rounded-full bg-brand/10 blur-3xl" />
+                <div aria-hidden className="absolute inset-[6%] rounded-full bg-[radial-gradient(circle,hsl(var(--brand)/0.12),transparent_65%)]" />
                 <IconCloud icons={skills.map(skillIcon)} />
               </Reveal>
               <div className="grid gap-4">
@@ -518,7 +512,7 @@ export default async function Page() {
 
       {/* ─── 06 · Education, certifications, hackathons ──────────── */}
       {(education.length > 0 || certifications.length > 0 || hackathons.length > 0) && (
-        <section id="journey" className="scroll-mt-20 py-24 sm:py-32">
+        <section id="journey" className="cv-auto scroll-mt-20 py-24 sm:py-32">
           <Container>
             <SectionHeading index="05" label="journey" title="Learning in public." />
             <div className="grid gap-5 lg:grid-cols-2">
@@ -602,9 +596,9 @@ export default async function Page() {
       )}
 
       {/* ─── 07 · Contact ─────────────────────────────────────────── */}
-      <section id="contact" className="relative scroll-mt-20 overflow-hidden py-28 sm:py-40">
+      <section id="contact" className="cv-auto relative scroll-mt-20 overflow-hidden py-28 sm:py-40">
         <div aria-hidden className="absolute inset-0 bg-grid mask-radial opacity-60" />
-        <div aria-hidden className="absolute left-1/2 top-1/2 size-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/10 blur-[140px]" />
+        <div aria-hidden className="absolute left-1/2 top-1/2 size-[52rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--brand)/0.12),transparent_62%)]" />
         <Container className="relative flex flex-col items-center text-center">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
             <span className="text-brand">06</span> / contact
@@ -631,7 +625,7 @@ export default async function Page() {
                 href="/resume"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border bg-background/60 px-5 py-3 text-sm font-medium backdrop-blur transition-colors hover:border-brand/60 hover:text-brand"
+                className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-5 py-3 text-sm font-medium transition-colors hover:border-brand/60 hover:text-brand"
               >
                 <DownloadIcon className="size-4" /> Download resume
               </a>
@@ -639,7 +633,7 @@ export default async function Page() {
           </div>
           {home && (
             <Reveal className="mt-20 w-full">
-              <div className="relative overflow-hidden rounded-3xl border bg-card/40 p-4 text-left backdrop-blur sm:p-8">
+              <div className="relative overflow-hidden rounded-3xl border bg-card/60 p-4 text-left sm:p-8">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-2">
                   <div>
                     <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Currently based in</p>

@@ -57,10 +57,31 @@ type HyperTextProps = {
 
 /** Text that decodes from random glyphs on mount (and on hover). */
 export function HyperText({ text, className, as: Tag = "span", duration, hover = true }: HyperTextProps) {
-  const { display, run } = useScramble(text, { duration });
+  const { display, run } = useScramble(text, { duration, auto: false });
+  const ref = useRef<HTMLSpanElement>(null);
+
+  // Decode once when it scrolls into view, not all headings at page load.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          run();
+          io.disconnect();
+        }
+      },
+      { rootMargin: "-10% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [run]);
+
   return (
     <Tag className={className} aria-label={text} onMouseEnter={hover ? run : undefined}>
-      <span aria-hidden>{display}</span>
+      <span ref={ref} aria-hidden>
+        {display}
+      </span>
     </Tag>
   );
 }

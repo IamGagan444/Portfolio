@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { isLowPowerDevice, whenIdle } from "./use-device";
+
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$#%&*+=?!@<>{}[]()/\\|;:~^".split("");
 const LEVELS = 12; // alpha buckets → one fillStyle change per bucket per frame
 const FPS = 30;
@@ -128,15 +130,27 @@ export function AsciiPortrait({ images, label, interval = 5200, className }: Asc
     const sources = imagesKey ? imagesKey.split("|") : [];
 
     let loaded: HTMLImageElement[] = [];
+    const lowPower = isLowPowerDevice();
+    const fps = lowPower ? 20 : FPS;
     let cols = 0;
     let rows = 0;
     let cellW = 0;
     let cellH = 0;
     let fontSize = 11;
-    let targets: Float32Array[] = [];
+    let dpr = 1;
+    let targets: (Float32Array | null)[] = [];
+    let cancelSampling = () => {};
     let current = new Float32Array(0);
     let glyphs = new Uint8Array(0);
     let delays = new Float32Array(0);
+    // What each cell currently shows, so only changed cells are repainted.
+    let shownGlyph = new Uint8Array(0);
+    let shownLevel = new Uint8Array(0);
+    let cellX = new Int32Array(0); // device-pixel cell edges (integer grid → no seams)
+    let cellY = new Int32Array(0);
+    let atlas: HTMLCanvasElement | null = null;
+    let atlasW = 0;
+    let atlasH = 0;
     let active = 0;
     let switchedAt = performance.now();
     let raf = 0;
@@ -145,6 +159,32 @@ export function AsciiPortrait({ images, label, interval = 5200, className }: Asc
     let disposed = false;
     const pointer = { x: -1e4, y: -1e4, strength: 0 };
     let colors = { brand: "162 72% 55%", fg: "160 20% 93%" };
+    const HOT = LEVELS; // extra atlas row: full-brightness highlight
+
+    /** Pre-renders every glyph at every brightness level once; frames then just copy pixels. */
+    const buildAtlas = () => {
+      if (!cols) return;
+      atlasW = Math.ceil(cellW * dpr);
+      atlasH = Math.ceil(cellH * dpr);
+      atlas = document.createElement("canvas");
+      atlas.width = atlasW * CHARS.length;
+      atlas.height = atlasH * (LEVELS + 1);
+      const a = atlas.getContext("2d")!;
+      const mono = getComputedStyle(document.body).getPropertyValue("--font-mono").trim();
+      a.font = `${fontSize * dpr}px ${mono ? `${mono}, ` : ""}ui-monospace, monospace`;
+      a.textBaseline = "top";
+      for (let level = 0; level <= LEVELS; level++) {
+        a.fillStyle =
+          level === HOT
+            ? hsla(colors.fg, 1)
+            : level >= LEVELS - 2
+              ? hsla(colors.fg, 0.95)
+              : hsla(colors.brand, ((level + 1) / LEVELS) * 0.9);
+        for (let c = 0; c < CHARS.length; c++) a.fillText(CHARS[c]!, c * atlasW, level * atlasH);
+      }
+      shownLevel.fill(255); // force a full repaint with the new atlas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
 
     const readColors = () => {
       const style = getComputedStyle(document.documentElement);
@@ -152,6 +192,7 @@ export function AsciiPortrait({ images, label, interval = 5200, className }: Asc
         brand: style.getPropertyValue("--brand") || colors.brand,
         fg: style.getPropertyValue("--foreground") || colors.fg,
       };
+      buildAtlas();
     };
 
     const scheduleDissolve = () => {
@@ -167,8 +208,9 @@ export function AsciiPortrait({ images, label, interval = 5200, className }: Asc
     const layout = () => {
       const rect = wrap.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      fontSize = rect.width < 380 ? 8 : rect.width < 520 ? 9.5 : 11;
+      dpr = Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2);
+      // Bigger cells on small/low-power screens: fewer glyphs, same look.
+      fontSize = lowPower ? (rect.width < 380 ? 9.5 : 10.5) : rect.width < 520 ? 9.5 : 11;
       cellW = fontSize * 0.62;
       cellH = fontSize * 1.08;
       cols = Math.max(20, Math.floor(rect.width / cellW));
@@ -178,83 +220,92 @@ export function AsciiPortrait({ images, label, interval = 5200, className }: Asc
       canvas.height = Math.floor(rect.height * dpr);
       canvas.style.width = `${rect.width}px`;
       canvas.style.height = `${rect.height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      // Canvas fonts can't use CSS variables; resolve next/font's generated family.
-      const mono = getComputedStyle(document.body).getPropertyValue("--font-mono").trim();
-      ctx.font = `${fontSize}px ${mono ? `${mono}, ` : ""}ui-monospace, monospace`;
-      ctx.textBaseline = "top";
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+      cellX = new Int32Array(cols + 1).map((_, i) => Math.round(i * cellW * dpr));
+      cellY = new Int32Array(rows + 1).map((_, i) => Math.round(i * cellH * dpr));
 
       const n = cols * rows;
       const previous = current;
       current = new Float32Array(n);
       if (previous.length === n) current.set(previous);
       glyphs = new Uint8Array(n).map(() => Math.floor(Math.random() * CHARS.length));
+      shownGlyph = new Uint8Array(n);
+      shownLevel = new Uint8Array(n).fill(255);
       delays = new Float32Array(n);
-      targets = loaded.map((img) => sampleImage(img, cols, rows, cellH / cellW));
+      // Convert the first photo now; the rest in idle slices so no single task is long.
+      cancelSampling();
+      targets = loaded.map((img, i) => (i === 0 ? sampleImage(img, cols, rows, cellH / cellW) : null));
+      const sampleNext = (i: number) => {
+        if (i >= loaded.length) return;
+        cancelSampling = whenIdle(() => {
+          targets[i] = sampleImage(loaded[i]!, cols, rows, cellH / cellW);
+          sampleNext(i + 1);
+        });
+      };
+      sampleNext(1);
+      buildAtlas();
       scheduleDissolve();
     };
 
     const draw = (now: number) => {
+      if (!atlas) return;
       const n = cols * rows;
       const target = targets[active];
       const elapsed = now - switchedAt;
-      const buckets: number[][] = Array.from({ length: LEVELS }, () => []);
-      const hot: number[] = [];
       const radius = Math.max(cellW, cellH) * 9;
-
+      const pointerActive = pointer.strength > 0.01;
       pointer.strength *= 0.94;
 
       for (let i = 0; i < n; i++) {
         const t = target ? target[i]! : 0.05;
         if (elapsed > delays[i]!) current[i]! += (t - current[i]!) * 0.14;
-        const delta = Math.abs(t - current[i]!);
-
         let v = current[i]!;
-        let churn = 0.012 + delta * 0.9;
+        let churn = 0.012 + Math.abs(t - v) * 0.9;
+        let hot = false;
 
-        if (pointer.strength > 0.01) {
-          const x = (i % cols) * cellW + cellW / 2;
-          const y = Math.floor(i / cols) * cellH + cellH / 2;
-          const d = Math.hypot(x - pointer.x, y - pointer.y);
+        if (pointerActive) {
+          const col = i % cols;
+          const row = (i - col) / cols;
+          const d = Math.hypot((col + 0.5) * cellW - pointer.x, (row + 0.5) * cellH - pointer.y);
           if (d < radius) {
             const k = (1 - d / radius) * pointer.strength;
             v = Math.min(1, v + k * 0.7);
             churn += k * 0.8;
-            if (k > 0.45) hot.push(i);
+            hot = k > 0.45;
           }
         }
 
         if (!reduceMotion && Math.random() < churn) glyphs[i] = Math.floor(Math.random() * CHARS.length);
         // Gamma pushes mid-tones down so the figure separates from the noise field.
-        const level = Math.min(LEVELS - 1, Math.floor((0.05 + Math.pow(v, 1.6) * 0.95) * LEVELS));
-        buckets[level]!.push(i);
-      }
+        const level = hot ? HOT : Math.min(LEVELS - 1, Math.floor((0.05 + Math.pow(v, 1.6) * 0.95) * LEVELS));
+        const glyph = glyphs[i]!;
+        if (level === shownLevel[i] && glyph === shownGlyph[i]) continue;
 
-      ctx.clearRect(0, 0, cols * cellW + cellW, rows * cellH + cellH);
-      for (let level = 0; level < LEVELS; level++) {
-        const indices = buckets[level]!;
-        if (indices.length === 0) continue;
-        const alpha = (level + 1) / LEVELS;
-        // Brightest cells take the foreground colour; the rest glow in the brand colour.
-        ctx.fillStyle = level >= LEVELS - 2 ? hsla(colors.fg, 0.95) : hsla(colors.brand, alpha * 0.9);
-        for (const i of indices) {
-          ctx.fillText(CHARS[glyphs[i]!]!, (i % cols) * cellW, Math.floor(i / cols) * cellH);
-        }
-      }
-      if (hot.length) {
-        ctx.fillStyle = hsla(colors.fg, 1);
-        for (const i of hot) ctx.fillText(CHARS[glyphs[i]!]!, (i % cols) * cellW, Math.floor(i / cols) * cellH);
+        // Repaint just this cell.
+        const col = i % cols;
+        const row = (i - col) / cols;
+        const x = cellX[col]!;
+        const y = cellY[row]!;
+        ctx.clearRect(x, y, cellX[col + 1]! - x, cellY[row + 1]! - y);
+        ctx.drawImage(atlas, glyph * atlasW, level * atlasH, atlasW, atlasH, x, y, atlasW, atlasH);
+        shownLevel[i] = level;
+        shownGlyph[i] = glyph;
       }
 
       if (targets.length > 1 && now - switchedAt > interval) {
-        active = (active + 1) % targets.length;
-        scheduleDissolve();
+        const next = (active + 1) % targets.length;
+        // Only advance once the next photo has been converted.
+        if (targets[next]) {
+          active = next;
+          scheduleDissolve();
+        }
       }
     };
 
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      if (!visible || now - last < 1000 / FPS) return;
+      if (!visible || now - last < 1000 / fps) return;
       last = now;
       draw(now);
     };
@@ -283,7 +334,8 @@ export function AsciiPortrait({ images, label, interval = 5200, className }: Asc
     document.addEventListener("visibilitychange", onVisibility);
     wrap.addEventListener("pointermove", onPointer);
 
-    Promise.allSettled(sources.map(loadImage)).then((results) => {
+    let cancelIdle = () => {};
+    const start = () => Promise.allSettled(sources.map(loadImage)).then((results) => {
       if (disposed) return;
       loaded = results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
       layout();
@@ -295,9 +347,13 @@ export function AsciiPortrait({ images, label, interval = 5200, className }: Asc
       }
       raf = requestAnimationFrame(loop);
     });
+    // Heavy setup waits for an idle moment so first paint and taps stay snappy.
+    cancelIdle = whenIdle(() => void start());
 
     return () => {
       disposed = true;
+      cancelIdle();
+      cancelSampling();
       cancelAnimationFrame(raf);
       themeObserver.disconnect();
       resizeObserver.disconnect();

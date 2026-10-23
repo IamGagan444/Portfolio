@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 type Line = { command: string; output: React.ReactNode };
@@ -11,7 +10,22 @@ type Line = { command: string; output: React.ReactNode };
  */
 export function Terminal({ title, lines }: { title: string; lines: Line[] }) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "-80px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const [step, setStep] = useState(0); // index of line being typed
   const [typed, setTyped] = useState("");
 
@@ -38,7 +52,7 @@ export function Terminal({ title, lines }: { title: string; lines: Line[] }) {
   }, [inView, step, lines]);
 
   return (
-    <div ref={ref} className="overflow-hidden rounded-2xl border bg-card/70 shadow-[0_0_0_1px_hsl(var(--brand)/0.04),0_30px_80px_-30px_hsl(var(--brand)/0.25)] backdrop-blur">
+    <div ref={ref} className="overflow-hidden rounded-2xl border bg-card/70 shadow-[0_0_0_1px_hsl(var(--brand)/0.04),0_30px_80px_-30px_hsl(var(--brand)/0.25)]">
       <div className="flex items-center gap-2 border-b px-4 py-3">
         <span className="size-2.5 rounded-full bg-[#ff5f57]" />
         <span className="size-2.5 rounded-full bg-[#febc2e]" />
@@ -57,14 +71,13 @@ export function Terminal({ title, lines }: { title: string; lines: Line[] }) {
                 {typing ? typed : line.command}
                 {typing && <span className="ml-0.5 inline-block h-[1em] w-[0.5em] translate-y-[0.15em] animate-blink bg-brand" />}
               </p>
-              <motion.div
-                initial={false}
-                animate={{ opacity: done ? 1 : 0, y: done ? 0 : 6 }}
-                transition={{ duration: 0.4 }}
-                className="font-sans text-sm text-muted-foreground"
+              <div
+                className={`font-sans text-sm text-muted-foreground transition-[opacity,transform] duration-400 ${
+                  done ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0"
+                }`}
               >
                 {line.output}
-              </motion.div>
+              </div>
             </div>
           );
         })}

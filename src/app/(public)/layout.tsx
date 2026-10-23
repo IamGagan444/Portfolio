@@ -1,7 +1,8 @@
 import Navbar from "@/components/navbar";
-import { ScrollProgress } from "@/components/portfolio/effects";
+import { ScrollProgress } from "@/components/portfolio/reveal";
 import { SiteFooter, SiteHeader } from "@/components/portfolio/site-chrome";
-import { SmoothCursor } from "@/components/portfolio/smooth-cursor";
+import { CursorLoader } from "@/components/portfolio/cursor-loader";
+import { SpotlightTracker } from "@/components/portfolio/spotlight-tracker";
 import { getActiveResume, getProfile, getSkills } from "@/lib/data/portfolio";
 import { seoKeywords } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
@@ -84,7 +85,8 @@ export default async function PublicLayout({
   return (
     <div className="relative min-h-dvh overflow-x-clip">
       <ScrollProgress />
-      <SmoothCursor />
+      <CursorLoader />
+      <SpotlightTracker />
       <SiteHeader profile={profile} />
       {children}
       <SiteFooter profile={profile} />

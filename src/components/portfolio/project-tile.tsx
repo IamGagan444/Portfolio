@@ -7,7 +7,9 @@ import { formatPeriod } from "@/lib/format";
 import { cn, isOptimizableImage } from "@/lib/utils";
 import type { ProjectDTO } from "@/lib/validations/portfolio";
 
-import { BorderBeam, LazyVideo, MagicCard, Reveal } from "./effects";
+import { LazyVideo } from "./effects";
+import { BorderBeam, MagicCard } from "./surfaces";
+import { Reveal } from "./reveal";
 import { projectLinks } from "./project-props";
 
 /** Project card with spotlight, lazy video preview, and links. */

@@ -63,14 +63,14 @@ export function Globe({ home, destinations = [], className }: GlobeProps) {
     const arcs: Arc[] = dests.map((to) => ({ from: [homeLat, homeLng], to }));
 
     const globe = createGlobe(canvas, {
-      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
       width: width * 2,
       height: width * 2,
       phi,
       theta,
       dark: isDark ? 1 : 0,
       diffuse: isDark ? 1.4 : 1.2,
-      mapSamples: 16000,
+      mapSamples: 12000,
       mapBrightness: isDark ? 5 : 1.2,
       mapBaseBrightness: 0,
       baseColor: isDark ? [0.16, 0.22, 0.21] : [1, 1, 1],

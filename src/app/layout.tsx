@@ -1,5 +1,4 @@
 import { ThemeProvider } from "@/components/theme-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
@@ -62,7 +61,7 @@ export default function RootLayout({
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="dark">
-          <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

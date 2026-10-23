@@ -5,6 +5,8 @@ import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { isLowPowerDevice, whenIdle } from "./use-device";
+
 export type CloudIcon = {
   name: string;
   /** Explicit image URL (from the CMS); takes precedence over slugs. */
@@ -101,7 +103,7 @@ export function IconCloud({ icons, className }: { icons: CloudIcon[]; className?
 
     const resize = () => {
       size = wrap.clientWidth;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, isLowPowerDevice() ? 1.5 : 2);
       canvas.width = size * dpr;
       canvas.height = size * dpr;
       canvas.style.width = `${size}px`;
@@ -173,7 +175,10 @@ export function IconCloud({ icons, className }: { icons: CloudIcon[]; className?
         label.style.opacity = "0";
       }
     };
-    raf = requestAnimationFrame(draw);
+    // Start when the browser is idle so it never competes with first paint/input.
+    const cancelIdle = whenIdle(() => {
+      raf = requestAnimationFrame(draw);
+    });
 
     const onDown = (e: PointerEvent) => {
       drag = { x: e.clientX, y: e.clientY };
@@ -210,6 +215,7 @@ export function IconCloud({ icons, className }: { icons: CloudIcon[]; className?
     io.observe(wrap);
 
     return () => {
+      cancelIdle();
       cancelAnimationFrame(raf);
       ro.disconnect();
       io.disconnect();

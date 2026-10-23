@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRef, useSyncExternalStore } from "react";
@@ -67,18 +66,19 @@ export function AnimatedThemeToggler({ className, ref: forwardedRef, onClick, ..
         className,
       )}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span
-          key={isDark ? "moon" : "sun"}
-          initial={{ y: 14, rotate: -90, opacity: 0 }}
-          animate={{ y: 0, rotate: 0, opacity: 1 }}
-          exit={{ y: -14, rotate: 90, opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          className="flex"
-        >
-          {isDark ? <MoonIcon className="size-4" /> : <SunIcon className="size-4" />}
-        </motion.span>
-      </AnimatePresence>
+      {/* Both icons stay mounted; CSS rotates/fades between them (no animation library). */}
+      <SunIcon
+        className={cn(
+          "absolute size-4 transition-all duration-300",
+          isDark ? "-rotate-90 scale-50 opacity-0" : "rotate-0 scale-100 opacity-100",
+        )}
+      />
+      <MoonIcon
+        className={cn(
+          "absolute size-4 transition-all duration-300",
+          isDark ? "rotate-0 scale-100 opacity-100" : "rotate-90 scale-50 opacity-0",
+        )}
+      />
     </button>
   );
 }

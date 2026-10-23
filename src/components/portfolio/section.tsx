@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-import { Reveal } from "./effects";
+import { Reveal } from "./reveal";
 import { HyperText } from "./scramble";
 
 export function Container({ children, className }: { children: React.ReactNode; className?: string }) {
